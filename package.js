@@ -12,12 +12,14 @@ Package.onUse(function(api) {
   api.use(['check', 'underscore', 'reactive-dict', 'mongo']);
   api.addFiles([
     'lib/globals.js',
-    'lib/lag-base.js',
     'lib/caching.js',
+    'lib/wrapper.js',
+    'lib/base_configurator.js',
+    'lib/configurator.js',
     'lib/api.js',
     'lib/bootstrap.js'
   ], 'server');
-  api.export('API', 'server');
+  api.export(['API', 'Configurator', 'Wrapper'], 'server');
 });
 
 Package.onTest(function(api) {
