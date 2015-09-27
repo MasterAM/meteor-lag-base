@@ -46,7 +46,7 @@ All methods wll have `defaultDelay`, except for the ones that are explicitly set
 
 ```
 {
-  "lagMethods": {
+  "alon-lag": {
     "disable": <Boolean, default: false>,
     "persist": <Boolean, default: false>,
     "defaultDelay": <Integer, default: 2000>,
