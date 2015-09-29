@@ -1,7 +1,7 @@
 Package.describe({
   name: 'alon:lag-base',
   summary: 'A base package for simulating network lag.',
-  version: '1.0.0',
+  version: '1.0.1',
   git: 'https://github.com/MasterAM/meteor-lag-base',
   documentation: 'README.md',
   debugOnly: true
@@ -24,6 +24,6 @@ Package.onUse(function(api) {
 
 Package.onTest(function(api) {
   api.use('tinytest');
-  api.use('alon:lag-methods');
+  api.use('alon:lag-base');
   api.addFiles('tests/server/server-test.js', 'server');
 });
