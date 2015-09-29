@@ -25,7 +25,5 @@ Package.onUse(function(api) {
 Package.onTest(function(api) {
   api.use('tinytest');
   api.use('alon:lag-methods');
-  api.addFiles('tests/server/configs.js', 'server');
   api.addFiles('tests/server/server-test.js', 'server');
-  api.addFiles('tests/client/client-test.js', 'client');
 });

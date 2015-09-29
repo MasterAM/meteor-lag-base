@@ -1,20 +1,3 @@
-Meteor.methods({
-  'foo': function(intArg, stringVar) {
-    check(intArg, Number);
-    check(stringVar, String);
-    return true;
-  },
-  'bar': function(intArg, stringVar) {
-    check(intArg, Number);
-    check(stringVar, String);
-    return true;
-  },
-  'baz': function(intArg, stringVar) {
-    check(intArg, Number);
-    check(stringVar, String);
-    return true;
-  }
-});
 //Test API:
 //test.isFalse(v, msg)
 //test.isTrue(v, msg)
@@ -34,37 +17,128 @@ Meteor.methods({
 //test.ok(doc)
 //test.fail(doc)
 //test.equal(a, b, msg)
-var pkg = Package['alon:lag-methods'];
 
-function callSync(name, delay, test) {
-  var tStart = new Date().getTime();
-  var result = Meteor.call('foo', 1, '1');
-  var dt = new Date().getTime() - tStart;
-  test.isTrue(dt >= delay, name + ' method call should take more than ' + delay + ' ms');
-  test.equal(result, true, 'return value is as expected');
-}
 
-Tinytest.add('make sure that the configurator is available', function(test) {
-  test.isTrue(typeof pkg.API === 'object', 'the API is available');
+Meteor.settings = Meteor.settings || {};
+Meteor.settings.lagConfig = Meteor.settings.lagConfig || {};
+
+var api = Package['alon:lag-base'].API;
+var Configurator = Package['alon:lag-base'].Configurator;
+var Wrapper = Package['alon:lag-base'].Wrapper;
+var configCollection = api._getConfigCollection();
+
+var setConfig = function (configName, value, level) {
+  configCollection.upsert({type: 'config', name: configName, level: level}, {$set: {value: value}})
+};
+
+Tinytest.add('make sure that the exports are available', function (test) {
+  test.isTrue(typeof api === 'object', 'the API is available');
+  test.isTrue(typeof Configurator === 'function', 'the configurator is available');
+  test.isTrue(typeof Wrapper === 'function', 'the wrapper is available');
 });
 
-Tinytest.add("default delay on sync server calls", function(test) {
-  callSync('foo', 2000, test);
-  callSync('bar', 2000, test);
-  callSync('baz', 2000, test);
+Tinytest.add("setting delay", function (test) {
+  var base = api._getBaseConfigurator();
+  var delay = 5000;
+  test.equal(api.setDefaultDelay(delay), base.defaultConfigs.defaultDelay, 'default delay returned from setter');
+  test.equal(api.setDefaultDelay(base.defaultConfigs.defaultDelay), delay, 'default delay successfully set');
 });
 
-
-Tinytest.add("modified delay on sync server calls", function(test) {
-  pkg.API.setDefaultDelay(lagDefault);
-  callSync('foo', lagDefault, test);
-  callSync('bar', lagDefault, test);
-  callSync('baz', lagDefault, test);
+Tinytest.add("setting disable", function (test) {
+  var base = api._getBaseConfigurator();
+  test.equal(base.getConfigOption('disable'), false);
+  base.setConfigOption('disable', true);
+  test.equal(base.getConfigOption('disable'), true);
+  base.setConfigOption('disable', false);
 });
 
-Tinytest.add("per-method delay on sync server calls", function(test) {
-  pkg.API.setDelaysForMethods(lagConfig);
-  callSync('foo', lagConfig.foo, test);
-  callSync('bar', lagConfig.bar, test);
-  callSync('baz', lagDefault, test);
+Tinytest.add("derived configurator", function (test) {
+  var base = api._getBaseConfigurator();
+  var cfg = new Configurator('foo', base, {
+    disable: true,
+    delays: {
+      'bar': 500,
+      'baz': 300
+    },
+    exclude: [
+      'me'
+    ]
+  });
+
+  test.isTrue(cfg.getConfigOption('disable'), 'sub is disabled according to config object');
+
+  test.isTrue(cfg.isDisabled(), 'sub is disabled by own config');
+
+  test.equal(api.getDelayFor('foo', 'foo'), 0);
+  test.equal(api.getDelayFor('foo', 'bar'), 0);
+  test.equal(api.getDelayFor('foo', 'baz'), 0);
+  test.equal(api.getDelayFor('foo', 'me'), 0);
+
+  setConfig('disable', false, 'foo');
+
+  test.isFalse(cfg.isDisabled(), 'sub is enabled');
+
+  test.equal(api.getDelayFor('foo', 'foo'), base.defaultConfigs.defaultDelay);
+  test.equal(api.getDelayFor('foo', 'bar'), 500);
+  test.equal(api.getDelayFor('foo', 'baz'), 300);
+  test.equal(api.getDelayFor('foo', 'me'), 0);
+
+  base.setConfigOption('disable', true);
+
+  test.isTrue(cfg.isDisabled(), 'sub is disabled by main config');
+
+  test.equal(api.getDelayFor('foo', 'foo'), 0);
+  test.equal(api.getDelayFor('foo', 'bar'), 0);
+  test.equal(api.getDelayFor('foo', 'baz'), 0);
+  test.equal(api.getDelayFor('foo', 'me'), 0);
+
+  base.setConfigOption('disable', false);
+
+});
+
+Tinytest.add("derived configurator from json", function (test) {
+  var base = api._getBaseConfigurator();
+
+  Meteor.settings.lagConfig.bars = {
+    disable: true,
+    delays: {
+      'bar': 500,
+      'baz': 300
+    },
+    exclude: [
+      'me'
+    ]
+  };
+
+  var cfg = new Configurator('bar', base);
+
+  test.isTrue(cfg.getConfigOption('disable'), 'sub is disabled according to config object');
+
+  test.isTrue(cfg.isDisabled(), 'sub is disabled by own config');
+
+  test.equal(api.getDelayFor('bar', 'foo'), 0);
+  test.equal(api.getDelayFor('bar', 'bar'), 0);
+  test.equal(api.getDelayFor('bar', 'baz'), 0);
+  test.equal(api.getDelayFor('bar', 'me'), 0);
+
+  setConfig('disable', false, 'bar');
+
+  test.isFalse(cfg.isDisabled(), 'sub is enabled');
+
+  test.equal(api.getDelayFor('bar', 'foo'), base.defaultConfigs.defaultDelay);
+  test.equal(api.getDelayFor('bar', 'bar'), 500);
+  test.equal(api.getDelayFor('bar', 'baz'), 300);
+  test.equal(api.getDelayFor('bar', 'me'), 0);
+
+  base.setConfigOption('disable', true);
+
+  test.isTrue(cfg.isDisabled(), 'sub is disabled by main config');
+
+  test.equal(api.getDelayFor('bar', 'foo'), 0);
+  test.equal(api.getDelayFor('bar', 'bar'), 0);
+  test.equal(api.getDelayFor('bar', 'baz'), 0);
+  test.equal(api.getDelayFor('bar', 'me'), 0);
+
+  base.setConfigOption('disable', false);
+
 });
