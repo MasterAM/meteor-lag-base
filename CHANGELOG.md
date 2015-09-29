@@ -6,8 +6,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Nothing.
 
-## 1.0.0 - 2015-09-27
+## [v1.0.1] - 2015-09-28
+### Fixed
+- A small bug in test code.
+
+
+## v1.0.0 - 2015-09-28
 ### Added
 - Initial release.
 
-[unreleased]: https://github.com/MasterAM/meteor-lag-base/compare/v1.0.0...HEAD
+[v1.0.1]: https://github.com/MasterAM/meteor-lag-base/compare/v1.0.0...1.0.1
+[unreleased]: https://github.com/MasterAM/meteor-lag-base/compare/v1.0.1...HEAD
