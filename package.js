@@ -1,7 +1,7 @@
 Package.describe({
   name: 'alon:lag-base',
   summary: 'A base package for simulating network lag.',
-  version: '1.0.1',
+  version: '1.0.2',
   git: 'https://github.com/MasterAM/meteor-lag-base',
   documentation: 'README.md',
   debugOnly: true

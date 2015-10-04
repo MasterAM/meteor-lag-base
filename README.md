@@ -13,6 +13,7 @@ Those also have a [Constellation UI plugin](https://github.com/MasterAM/meteor-l
 ```sh
 $ meteor add alon:lag-base
 ```
+**Note**: This package is not meant to be installed directly. Use one of the dependent packages.
 
 ## TL;DR
 Those packages (this one is just the base for them) allow you to delay publications and method calls on your dev machine so that you don't have to use stuff like `Meteor._sleepForMs()` in code that should be commit-able, in order to simulate network lag.
